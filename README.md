@@ -1,89 +1,63 @@
-# SensorBridgeX — Embedded Linux Sensor Gateway & Character Device Driver Framework
+# SensorBridgeX
+## Software-Only Embedded Linux Sensor Gateway
 
-SensorBridgeX is a Linux-based embedded sensor gateway demonstration built using **C/C++ only**.
+![C++17](https://img.shields.io/badge/C%2B%2B-17-blue) ![Linux](https://img.shields.io/badge/platform-Linux-green) ![Docker](https://img.shields.io/badge/Docker-supported-2496ED)
 
-It demonstrates:
+SensorBridgeX is a C++17 user-space telemetry gateway prototype. It ingests CSV sensor-like readings, validates them against configurable limits, reports rejected records, and exports accepted readings. It is intentionally software-only: **no physical sensors, GPIO/I²C/SPI hardware, kernel module, or root access is required**.
 
-- Linux character-device driver concepts
-- Kernel-space / user-space communication
-- `/dev/sensorbridge` device interface
-- `open()`, `read()`, `write()`, and `ioctl()`
-- C++ user-space gateway
-- C++ sensor simulator
-- Makefile-based builds
-- Error handling and statistics
-- A design that can later connect to real I2C/SPI sensors
+## Features
+- Deterministic built-in simulator and CSV ingestion
+- Configurable temperature/humidity validation
+- Per-record accept/reject reasons and summary counters
+- CMake + CTest build and automated tests
+- Docker multi-stage build, Docker Compose hardening, systemd service example
+- Standard-library-only C++17 implementation
 
 ## Architecture
-
 ```text
-Sensor Simulator
-       |
-       v
-Linux Character Driver (sensorbridge.ko)
-       |
-       v
-/dev/sensorbridge
-       |
-       v
-C++ Sensor Gateway
-       |
-       v
-Validation / Statistics / Console
+CSV / Simulator -> Parser -> Validator -> Accepted CSV
+                                  |
+                                  +----> Rejection reason + summary metrics
 ```
 
-## Requirements
-
-- Ubuntu / Ubuntu on WSL2
-- GCC / G++
-- Make
-- Linux kernel headers matching the running kernel
-- VS Code (recommended)
-- Git
-
-## Quick start
-
-```bash
-sudo apt update
-sudo apt install build-essential linux-headers-$(uname -r) git
-make
-sudo ./scripts/load_driver.sh
-./gateway/sensor_gateway
-```
-
-If your WSL kernel does not provide loadable-module support, build the user-space components first and use a native Ubuntu VM/installation for the kernel-module demonstration.
-
-## Project structure
-
+## Repository layout
 ```text
 SensorBridgeX/
-├── driver/
-├── gateway/
-├── simulator/
-├── include/
-├── scripts/
-├── tests/
-├── docs/
-├── demo/
-├── Makefile
-└── README.md
+├── README.md  CMakeLists.txt  Dockerfile  docker-compose.yml
+├── config/  data/  include/sensorbridgex/
+├── src/  scripts/  tests/  docs/  systemd/
+└── .gitignore  .dockerignore  LICENSE
 ```
 
-## Important note
+## Build and run (Ubuntu / WSL)
+```bash
+sudo apt update
+sudo apt install -y build-essential cmake
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+./build/sensorbridgex --config config/sensorbridgex.conf
+```
 
-The simulator represents the physical sensor for a hardware-free demonstration. It does not claim to be a real physical sensor. A production version can replace the simulator with an I2C/SPI sensor implementation.
+Invalid-data demo (three of five rows are intentionally rejected; exit code 1 is expected):
+```bash
+./build/sensorbridgex --config config/sensorbridgex.conf --input data/invalid_sensor_readings.csv --output build/invalid.csv
+```
 
-## Interview focus
+Simulator demo:
+```bash
+./build/sensorbridgex --config config/sensorbridgex.conf --simulate --output build/simulated.csv
+```
 
-Be prepared to explain:
+## Docker
+```bash
+docker compose build
+mkdir -p output
+docker compose run --rm sensorbridgex
+```
 
-1. User space vs kernel space
-2. Character devices
-3. `file_operations`
-4. `/dev/sensorbridge`
-5. `open/read/write/ioctl`
-6. `copy_to_user()` and `copy_from_user()`
-7. Kernel modules
-8. I2C/SPI extension
-9. Error handling
-10. Driver lifecycle
+## CLI
+`--config PATH`, `--input PATH`, `--output PATH`, `--simulate`, `--help`
+
+## Honest scope
+This is a software-only embedded-Linux-oriented prototype, not a physical sensor driver or a production-certified system. Do not claim hardware integration or production testing unless you perform those separately. See `docs/` for architecture, demo, security notes, and interview Q&A.

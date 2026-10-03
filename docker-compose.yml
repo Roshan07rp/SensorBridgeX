@@ -1,0 +1,10 @@
+services:
+  sensorbridgex:
+    build: .
+    image: sensorbridgex:1.0
+    read_only: true
+    tmpfs: [/tmp]
+    volumes: ["./output:/app/output"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: "no"

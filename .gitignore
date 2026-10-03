@@ -1,12 +1,1 @@
-*.o
-*.ko
-*.mod
-*.mod.c
-*.order
-*.symvers
-*.cmd
-Module.symvers
-modules.order
-.DS_Store
-__pycache__/
-.vscode/
+build/\ncmake-build-*/\n*.log\n.vscode/\n.DS_Store\n
