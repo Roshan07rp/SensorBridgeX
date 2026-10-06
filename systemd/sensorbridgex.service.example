@@ -1,0 +1,20 @@
+[Unit]
+Description=SensorBridgeX software telemetry gateway
+After=network.target
+
+[Service]
+Type=oneshot
+User=sensorbridgex
+Group=sensorbridgex
+WorkingDirectory=/opt/sensorbridgex
+ExecStart=/opt/sensorbridgex/build/sensorbridgex --config /opt/sensorbridgex/config/sensorbridgex.conf
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/sensorbridgex/build
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
